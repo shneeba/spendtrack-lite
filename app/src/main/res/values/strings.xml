@@ -8,7 +8,9 @@
     <string name="add_expense_title">Add Expense</string>
     <string name="hint_amount">Amount</string>
     <string name="hint_description">Description</string>
-    <string name="hint_datetime">When did this happen?</string>
+    <string name="preset_timestamp_now">Now</string>
+    <string name="preset_timestamp_today">Today</string>
+    <string name="preset_timestamp_week">This week</string>
     <string name="button_save">Save</string>
     <string name="error_invalid_amount">Enter an amount greater than 0</string>
     <string name="error_empty_description">Description cannot be empty</string>

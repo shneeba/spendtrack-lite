@@ -1,5 +1,7 @@
 package com.blazingbanana.spendtracklite
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -9,13 +11,24 @@ import com.blazingbanana.spendtracklite.data.Expense
 import com.blazingbanana.spendtracklite.data.SpendTrackDatabase
 import com.blazingbanana.spendtracklite.databinding.ActivityAddExpenseBinding
 import java.text.NumberFormat
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.WeekFields
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private enum class TimestampPreset {
+    NOW,
+    TODAY,
+    THIS_WEEK,
+    CUSTOM
+}
 
 class AddExpenseActivity : AppCompatActivity() {
 
@@ -25,6 +38,10 @@ class AddExpenseActivity : AppCompatActivity() {
     private val dateTimeFormatter: DateTimeFormatter by lazy {
         DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.UK)
     }
+    private val zoneId: ZoneId by lazy { ZoneId.systemDefault() }
+    private val weekFields: WeekFields by lazy { WeekFields.of(Locale.getDefault()) }
+
+    private var selectedPreset: TimestampPreset = TimestampPreset.NOW
     private var selectedTimestamp: Long = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,9 +51,23 @@ class AddExpenseActivity : AppCompatActivity() {
 
         binding.buttonSave.setOnClickListener { saveExpense() }
 
-        binding.inputTimestamp.setOnClickListener { openDateTimePicker() }
-
-        updateTimestampField(selectedTimestamp)
+        binding.groupTimestampPreset.addOnButtonCheckedListener { group, checkedId, isChecked ->
+            if (!isChecked) {
+                if (group.checkedButtonIds.isEmpty()) {
+                    selectedPreset = TimestampPreset.CUSTOM
+                }
+                return@addOnButtonCheckedListener
+            }
+            val preset = when (checkedId) {
+                binding.buttonPresetNow.id -> TimestampPreset.NOW
+                binding.buttonPresetToday.id -> TimestampPreset.TODAY
+                binding.buttonPresetWeek.id -> TimestampPreset.THIS_WEEK
+                else -> TimestampPreset.NOW
+            }
+            applyPreset(preset)
+        }
+        binding.groupTimestampPreset.check(binding.buttonPresetNow.id)
+        binding.textTimestampValue.setOnClickListener { openCustomPicker() }
 
         binding.inputAmount.doAfterTextChanged {
             binding.layoutAmount.error = null
@@ -88,29 +119,49 @@ class AddExpenseActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateTimestampField(epochMillis: Long) {
-        val localDateTime = LocalDateTime.ofInstant(
-            java.time.Instant.ofEpochMilli(epochMillis),
-            ZoneId.systemDefault()
-        )
-        binding.inputTimestamp.setText(dateTimeFormatter.format(localDateTime))
+    private fun applyPreset(preset: TimestampPreset) {
+        selectedPreset = preset
+        selectedTimestamp = calculateTimestamp(preset)
+        updateTimestampField(selectedTimestamp)
     }
 
-    private fun openDateTimePicker() {
-        val currentDateTime = LocalDateTime.ofInstant(
-            java.time.Instant.ofEpochMilli(selectedTimestamp),
-            ZoneId.systemDefault()
+    private fun updateTimestampField(epochMillis: Long) {
+        val localDateTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(epochMillis),
+            zoneId
         )
-        val datePicker = android.app.DatePickerDialog(
+        binding.textTimestampValue.text = dateTimeFormatter.format(localDateTime)
+    }
+
+    private fun calculateTimestamp(preset: TimestampPreset): Long {
+        return when (preset) {
+            TimestampPreset.NOW -> System.currentTimeMillis()
+            TimestampPreset.TODAY -> {
+                ZonedDateTime.now(zoneId)
+                    .toLocalDate()
+                    .atTime(LocalTime.NOON)
+                    .atZone(zoneId)
+                    .toInstant()
+                    .toEpochMilli()
+            }
+            TimestampPreset.THIS_WEEK -> {
+                val startOfWeek = ZonedDateTime.now(zoneId)
+                    .with(weekFields.dayOfWeek(), 1)
+                    .toLocalDate()
+                    .atTime(LocalTime.NOON)
+                    .atZone(zoneId)
+                startOfWeek.toInstant().toEpochMilli()
+            }
+            TimestampPreset.CUSTOM -> selectedTimestamp
+        }
+    }
+
+    private fun openCustomPicker() {
+        val currentDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(selectedTimestamp), zoneId)
+        val datePicker = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
-                val pickedDate = LocalDateTime.of(
-                    year,
-                    month + 1,
-                    dayOfMonth,
-                    currentDateTime.hour,
-                    currentDateTime.minute
-                )
+                val pickedDate = LocalDateTime.of(year, month + 1, dayOfMonth, currentDateTime.hour, currentDateTime.minute)
                 openTimePicker(pickedDate)
             },
             currentDateTime.year,
@@ -121,13 +172,15 @@ class AddExpenseActivity : AppCompatActivity() {
     }
 
     private fun openTimePicker(pickedDate: LocalDateTime) {
-        val timePicker = android.app.TimePickerDialog(
+        val timePicker = TimePickerDialog(
             this,
             { _, hourOfDay, minute ->
                 val zoned = pickedDate
                     .withHour(hourOfDay)
                     .withMinute(minute)
-                    .atZone(ZoneId.systemDefault())
+                    .atZone(zoneId)
+                selectedPreset = TimestampPreset.CUSTOM
+                binding.groupTimestampPreset.clearChecked()
                 selectedTimestamp = zoned.toInstant().toEpochMilli()
                 updateTimestampField(selectedTimestamp)
             },
