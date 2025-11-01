@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.SpendTrackLite" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/color_primary</item>
+        <item name="colorPrimaryVariant">@color/color_primary_dark</item>
+        <item name="colorOnPrimary">@color/color_on_primary</item>
+        <item name="colorSecondary">@color/color_secondary</item>
+        <item name="colorOnSecondary">@color/color_on_secondary</item>
+        <item name="colorSurface">@color/color_surface</item>
+        <item name="colorOnSurface">@color/color_on_surface</item>
+        <item name="android:colorBackground">@color/color_background</item>
+        <item name="android:textColorPrimary">@color/color_on_background</item>
+        <item name="android:textColorSecondary">@color/color_on_surface</item>
+        <item name="colorOutline">@color/color_outline</item>
+        <item name="android:windowBackground">@color/color_background</item>
+        <item name="materialButtonStyle">@style/Widget.SpendTrackLite.Button</item>
+        <item name="materialButtonOutlinedStyle">@style/Widget.SpendTrackLite.Button.Outlined</item>
+        <item name="materialCardViewStyle">@style/Widget.SpendTrackLite.Card</item>
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
+        <item name="android:navigationBarColor">@color/color_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

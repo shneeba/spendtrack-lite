@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">SpendTrack Lite</string>
+    <string name="button_add_expense">Add Expense</string>
+    <string name="button_view_spend">View Current Spend</string>
+    <string name="home_today_label">Today spend</string>
+    <string name="home_today_total_placeholder">£0.00</string>
+    <string name="home_today_total_format">%1$s</string>
+    <string name="add_expense_title">Add Expense</string>
+    <string name="add_expense_subtitle">Capture the amount and a quick note, then tap save.</string>
+    <string name="hint_amount">Amount</string>
+    <string name="hint_description">Description</string>
+    <string name="button_save">Save</string>
+    <string name="error_invalid_amount">Enter an amount greater than 0</string>
+    <string name="error_empty_description">Description cannot be empty</string>
+    <string name="toast_expense_saved">Saved %1$s</string>
+    <string name="view_total_label">Running total</string>
+    <string name="view_total_placeholder">£0.00</string>
+    <string name="view_total_format">%1$s</string>
+    <string name="view_empty_state">No expenses logged yet.</string>
+    <string name="button_export_csv">Export CSV</string>
+    <string name="toast_no_expenses_to_export">Log an expense first to export.</string>
+    <string name="toast_export_permission_denied">Permission denied. CSV not exported.</string>
+    <string name="toast_export_success">Exported to Documents/SpendTrack/expenses.csv</string>
+    <string name="toast_export_failed">Unable to export. Try again.</string>
+    <string name="item_expense_format">[%1$s] %2$s %3$s</string>
+</resources>
