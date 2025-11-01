@@ -9,6 +9,9 @@ import com.blazingbanana.spendtracklite.data.Expense
 import com.blazingbanana.spendtracklite.data.SpendTrackDatabase
 import com.blazingbanana.spendtracklite.databinding.ActivityAddExpenseBinding
 import java.text.NumberFormat
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,6 +22,10 @@ class AddExpenseActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAddExpenseBinding
     private val expenseDao by lazy { SpendTrackDatabase.getInstance(this).expenseDao() }
     private val currencyFormatter: NumberFormat by lazy { NumberFormat.getCurrencyInstance(Locale.UK) }
+    private val dateTimeFormatter: DateTimeFormatter by lazy {
+        DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm", Locale.UK)
+    }
+    private var selectedTimestamp: Long = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +33,10 @@ class AddExpenseActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.buttonSave.setOnClickListener { saveExpense() }
+
+        binding.inputTimestamp.setOnClickListener { openDateTimePicker() }
+
+        updateTimestampField(selectedTimestamp)
 
         binding.inputAmount.doAfterTextChanged {
             binding.layoutAmount.error = null
@@ -61,7 +72,7 @@ class AddExpenseActivity : AppCompatActivity() {
         val expense = Expense(
             amount = amount!!,
             description = description,
-            timestamp = System.currentTimeMillis()
+            timestamp = selectedTimestamp
         )
 
         lifecycleScope.launch {
@@ -75,5 +86,55 @@ class AddExpenseActivity : AppCompatActivity() {
             ).show()
             finish()
         }
+    }
+
+    private fun updateTimestampField(epochMillis: Long) {
+        val localDateTime = LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(epochMillis),
+            ZoneId.systemDefault()
+        )
+        binding.inputTimestamp.setText(dateTimeFormatter.format(localDateTime))
+    }
+
+    private fun openDateTimePicker() {
+        val currentDateTime = LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(selectedTimestamp),
+            ZoneId.systemDefault()
+        )
+        val datePicker = android.app.DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                val pickedDate = LocalDateTime.of(
+                    year,
+                    month + 1,
+                    dayOfMonth,
+                    currentDateTime.hour,
+                    currentDateTime.minute
+                )
+                openTimePicker(pickedDate)
+            },
+            currentDateTime.year,
+            currentDateTime.monthValue - 1,
+            currentDateTime.dayOfMonth
+        )
+        datePicker.show()
+    }
+
+    private fun openTimePicker(pickedDate: LocalDateTime) {
+        val timePicker = android.app.TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                val zoned = pickedDate
+                    .withHour(hourOfDay)
+                    .withMinute(minute)
+                    .atZone(ZoneId.systemDefault())
+                selectedTimestamp = zoned.toInstant().toEpochMilli()
+                updateTimestampField(selectedTimestamp)
+            },
+            pickedDate.hour,
+            pickedDate.minute,
+            true
+        )
+        timePicker.show()
     }
 }

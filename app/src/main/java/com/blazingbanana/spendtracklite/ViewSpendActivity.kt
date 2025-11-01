@@ -15,10 +15,13 @@ import com.blazingbanana.spendtracklite.data.Expense
 import com.blazingbanana.spendtracklite.data.SpendTrackDatabase
 import com.blazingbanana.spendtracklite.databinding.ActivityViewSpendBinding
 import java.text.NumberFormat
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 class ViewSpendActivity : AppCompatActivity() {
 
@@ -39,6 +42,7 @@ class ViewSpendActivity : AppCompatActivity() {
         }
     private val adapter by lazy { ExpenseAdapter(currencyFormatter) }
     private var latestExpenses: List<Expense> = emptyList()
+    private var selectedDays: Int = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +54,21 @@ class ViewSpendActivity : AppCompatActivity() {
 
         binding.buttonExport.setOnClickListener { exportExpenses() }
 
+        binding.sliderDays.value = selectedDays.toFloat()
+        binding.sliderDays.setLabelFormatter { value ->
+            val days = value.roundToInt().coerceIn(1, 31)
+            resources.getQuantityString(R.plurals.view_total_range, days, days)
+        }
+        binding.sliderDays.addOnChangeListener { _, value, _ ->
+            val newDays = value.roundToInt().coerceIn(1, 31)
+            if (newDays != selectedDays) {
+                selectedDays = newDays
+                updateTotalSection()
+            }
+        }
+        binding.textSliderHint.text = getString(R.string.view_slider_hint, 31)
+        updateTotalSection()
+
         observeExpenses()
     }
 
@@ -59,15 +78,36 @@ class ViewSpendActivity : AppCompatActivity() {
                 expenseDao.observeAllExpenses().collect { expenses ->
                     latestExpenses = expenses
                     adapter.submitList(expenses)
-                    val total = expenses.sumOf { it.amount }
-                    binding.textTotal.text = getString(
-                        R.string.view_total_format,
-                        currencyFormatter.format(total)
-                    )
                     binding.textEmpty.isVisible = expenses.isEmpty()
+                    updateTotalSection()
                 }
             }
         }
+    }
+
+    private fun updateTotalSection() {
+        val days = selectedDays
+        binding.textTotalRange.text =
+            resources.getQuantityString(R.plurals.view_total_range, days, days)
+        val total = calculateTotalForDays(days)
+        binding.textTotal.text = getString(
+            R.string.view_total_format,
+            currencyFormatter.format(total)
+        )
+    }
+
+    private fun calculateTotalForDays(days: Int): Double {
+        if (days <= 0 || latestExpenses.isEmpty()) return 0.0
+        val zone = ZoneId.systemDefault()
+        val startOfRange = ZonedDateTime.now(zone)
+            .minusDays((days - 1).toLong())
+            .toLocalDate()
+            .atStartOfDay(zone)
+        val startMillis = startOfRange.toInstant().toEpochMilli()
+        val endMillis = System.currentTimeMillis()
+        return latestExpenses.asSequence()
+            .filter { it.timestamp in startMillis..endMillis }
+            .sumOf { it.amount }
     }
 
     private fun exportExpenses() {

@@ -35,7 +35,9 @@ class ExpenseAdapter(
     }
 
     class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val textExpense: TextView = itemView.findViewById(R.id.textExpense)
+        private val dateView: TextView = itemView.findViewById(R.id.textExpenseDate)
+        private val amountView: TextView = itemView.findViewById(R.id.textExpenseAmount)
+        private val descriptionView: TextView = itemView.findViewById(R.id.textExpenseDescription)
 
         fun bind(
             expense: Expense,
@@ -44,12 +46,9 @@ class ExpenseAdapter(
         ) {
             val timestamp = dateFormatter.format(Instant.ofEpochMilli(expense.timestamp))
             val amountText = currencyFormat.format(expense.amount)
-            textExpense.text = itemView.context.getString(
-                R.string.item_expense_format,
-                timestamp,
-                amountText,
-                expense.description
-            )
+            dateView.text = timestamp
+            amountView.text = amountText
+            descriptionView.text = expense.description
         }
     }
 

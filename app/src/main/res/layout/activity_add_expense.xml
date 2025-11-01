@@ -13,21 +13,14 @@
         android:padding="28dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_horizontal"
             android:text="@string/add_expense_title"
             android:textColor="@color/color_on_background"
             android:textSize="26sp"
             android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/add_expense_subtitle"
-            android:textColor="@color/color_on_background"
-            android:textSize="15sp" />
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -86,6 +79,29 @@
                         android:imeOptions="actionDone"
                         android:inputType="textCapSentences"
                         android:maxLength="16"
+                        android:maxLines="1"
+                        android:textColor="@color/color_on_surface" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:id="@+id/layoutTimestamp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:hint="@string/hint_datetime"
+                    app:boxStrokeColor="@color/color_primary"
+                    app:boxStrokeWidth="1dp"
+                    app:boxStrokeWidthFocused="2dp"
+                    app:hintTextColor="@color/color_on_surface">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/inputTimestamp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="false"
+                        android:inputType="datetime"
                         android:maxLines="1"
                         android:textColor="@color/color_on_surface" />
 
